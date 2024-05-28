@@ -1,7 +1,5 @@
 package io.github.smaugfm.icloudpd.discord
 
-import java.io.PipedInputStream
-import java.io.PipedOutputStream
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -9,52 +7,27 @@ import kotlin.test.assertTrue
 class StringSearchingProxyInputStreamTest {
   @Test
   fun one() {
-    val searchText = "vasa"
-    val (os, i, found) = perform(searchText)
-    os.write('k'.code)
-    i.read()
-    assertFalse { found() }
-    os.write('v'.code)
-    i.read()
-    assertFalse { found() }
-    os.write('a'.code)
-    i.read()
-    assertFalse { found() }
-    os.write('s'.code)
-    i.read()
-    assertFalse { found() }
-    os.write('a'.code)
-    i.read()
-    assertTrue { found() }
-    os.write('a'.code)
-    i.read()
+    val buffer = StringSearchingCircularBuffer("vasa")
+    assertFalse(buffer.feedAndFind("k"))
+    assertFalse(buffer.feedAndFind("v"))
+    assertFalse(buffer.feedAndFind("a"))
+    assertFalse(buffer.feedAndFind("s"))
+    assertTrue(buffer.feedAndFind("a"))
+    assertFalse(buffer.feedAndFind("a"))
   }
 
   @Test
   fun two() {
-    val searchText = "vasa"
-    val (os, i, found) = perform(searchText)
-    os.write("vasa".toByteArray())
-    i.readNBytes(4)
-    assertTrue { found() }
+    val buffer = StringSearchingCircularBuffer("vasa")
+    assertTrue(buffer.feedAndFind("vasa"))
   }
 
   @Test
   fun three() {
-    val searchText = "vasa"
-    val (os, i, found) = perform(searchText)
-    os.write("vas vasa".toByteArray())
-    i.readNBytes(8)
-    assertTrue { found() }
+    val buffer = StringSearchingCircularBuffer("vasa")
+    assertTrue(buffer.feedAndFind("vas vasa"))
   }
 
-  private fun perform(searchText: String): Triple<PipedOutputStream, StringSearchingCircularBuffer, () -> Boolean> {
-    val pipedInputStream = PipedInputStream()
-    val pipedOutputStream = PipedOutputStream(pipedInputStream)
-    var found = false
-    val inputStream = StringSearchingCircularBuffer(pipedInputStream, searchText) {
-      found = true
-    }
-    return Triple(pipedOutputStream, inputStream) { found }
-  }
+  private fun StringSearchingCircularBuffer.feedAndFind(str: String): Boolean =
+    feedAndFind(str.toByteArray(), 0, str.length)
 }

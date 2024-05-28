@@ -4,7 +4,7 @@ class StringSearchingCircularBuffer(private val searchString: String) {
 
   private val buffer = CircularBuffer(searchString.length)
 
-  fun find(b: ByteArray, off: Int, len: Int): Boolean {
+  fun feedAndFind(b: ByteArray, off: Int, len: Int): Boolean {
     var wasFound = false
     for (i in off until off + len) {
       if (advanceAndCheck(b[i]))

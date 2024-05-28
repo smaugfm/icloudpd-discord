@@ -11,8 +11,12 @@ repositories {
 }
 
 dependencies {
-  implementation("commons-io:commons-io:2.16.1")
-  implementation("org.apache.commons:commons-collections4:4.5.0-M1")
+  implementation("net.dv8tion:JDA:5.0.0-beta.24") {
+    exclude(module = "opus-java")
+  }
+  implementation("club.minnced:jda-ktx:0.11.0-beta.19")
+  implementation("org.slf4j:slf4j-simple:2.0.13")
+  implementation("io.github.oshai:kotlin-logging-jvm:5.1.0")
   testImplementation(kotlin("test"))
 }
 

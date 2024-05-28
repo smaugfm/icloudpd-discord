@@ -1,23 +1,31 @@
 package io.github.smaugfm.icloudpd.discord
 
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.OutputStream
-import kotlin.system.exitProcess
 
-class IcloudPdBinaryAuthListeningWrapper(private val handleTwoStepAuth: () -> String) :
-  ProcessWrapper("icloudpd") {
+private val logger = KotlinLogging.logger("icloudpd")
+
+class IcloudPdBinaryAuthListeningWrapper(
+  private val handleTwoStepAuth: suspend () -> String
+) : ProcessWrapper("icloudpd") {
   private lateinit var input: OutputStream
-  private lateinit var wasFound: () -> Boolean
 
   private val searchingBuffer =
     StringSearchingCircularBuffer("Please enter two-factor authentication code:")
 
-  override fun onProcessOutput(buffer: ByteArray, len: Int) {
+  override suspend fun onProcessOutput(buffer: ByteArray, len: Int) {
     super.onProcessOutput(buffer, len)
-    if (searchingBuffer.find(buffer, 0, len)) {
+    logger.info { String(buffer, 0, len) }
+
+    if (searchingBuffer.feedAndFind(buffer, 0, len)) {
       val code = handleTwoStepAuth()
-      input.write((code + "\n").toByteArray())
-      input.flush()
-      println("written $code to process stdin")
+      withContext(Dispatchers.IO) {
+        input.write((code + "\n").toByteArray())
+        input.flush()
+      }
+      logger.info { "written $code to icloudpd stdin" }
     }
   }
 
@@ -30,11 +38,10 @@ class IcloudPdBinaryAuthListeningWrapper(private val handleTwoStepAuth: () -> St
     if (!(args.contains("-u") || args.contains("--username")) &&
       !(args.contains("-p") || args.contains("--password"))
     ) {
-      System.err.println(
+      fail(
         "icloudpd-discord: must contain '-u' or '--username' and '-p' or '--password' arguments. " +
             "Interactive username/password input to icloudpd is not supported"
       )
-      exitProcess(1)
     }
   }
 }
