@@ -29,6 +29,16 @@ tasks.shadowJar {
 tasks.test {
   useJUnitPlatform()
 }
+tasks.jar {
+  manifest {
+    attributes(
+      mapOf(
+        "Main-Class" to "io.github.smaugfm.icloudpd.discord.MainKt"
+      )
+    )
+  }
+}
+
 kotlin {
   jvmToolchain(11)
 }

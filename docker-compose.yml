@@ -1,0 +1,13 @@
+services:
+  icloudpd-discord:
+    pull_policy: build
+    build: .
+    user: "$PUID:$GUID"
+    command: java -jar /icloudpd-discord.jar --directory /data --cookie-directory /.pyicloud $ICLOUDPD_ARGS
+    volumes:
+      - $DATA_MOUNT:/data
+      - $PYICLOUD_MOUNT:/.pyicloud
+      - $ERROR_FILE_MOUNT:/icloudpd-photo-error.json
+    environment:
+      - BOT_TOKEN=$BOT_TOKEN
+      - DISCORD_USERID=$DISCORD_USERID
